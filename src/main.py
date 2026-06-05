@@ -201,6 +201,7 @@ async def main() -> None:
                         record['addressZip'] = addr_info.get('zip', '')
                         record['addressCountry'] = addr_info.get('country', '')
 
+                    Actor.log.info(f'PUSHING: {record.get("title")} lat={record.get("lat")} lng={record.get("lng")} keys={sorted(record.keys())}')
                     await Actor.push_data(record)
 
             Actor.log.info(f'Total places scraped: {total_scraped}')
