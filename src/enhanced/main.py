@@ -7,9 +7,6 @@ Features:
 - Delta/incremental mode
 - Social media enrichment
 - Business leads extraction
-- Full address extraction from detail pages
-- Lat/lng from URL parsing
-- Category post-filter
 """
 import asyncio
 import json
@@ -19,7 +16,7 @@ from typing import Set
 
 from apify import Actor
 
-from src.enhanced.client import EnhancedGoogleMapsClient, _parse_coords_from_url
+from src.enhanced.client import EnhancedGoogleMapsClient
 from src.utils import get_place_stable_id
 
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +38,6 @@ async def main() -> None:
 
         # Parse enhanced input
         search_terms = actor_input.get('searchStringsArray', [])
-        location_array = actor_input.get('locationArray', [])
         max_places_per_search = actor_input.get('maxCrawledPlacesPerSearch', 120)
         min_rating = actor_input.get('minRating', 'any')
         website_selection = actor_input.get('websiteSelection', 'all')
@@ -58,50 +54,14 @@ async def main() -> None:
         max_reviews = actor_input.get('maxReviews', 0)
         max_images = actor_input.get('maxImages', 0)
 
-        # New input fields
-        full_address = actor_input.get('fullAddress', False)
-        selected_category = actor_input.get('selectedCategory', '')
-        location_country = actor_input.get('locationCountry', '')
-        location_state = actor_input.get('locationState', '')
-        location_city = actor_input.get('locationCity', '')
-        location_zip = actor_input.get('locationZip', '')
-        location_lat = actor_input.get('locationLat', '')
-        location_lng = actor_input.get('locationLng', '')
-
         if not search_terms:
             Actor.log.error('No search terms provided – aborting')
             return
 
-        # Compose location from structured fields
-        structured_location_parts = []
-        if location_city:
-            structured_location_parts.append(location_city)
-        if location_state:
-            structured_location_parts.append(location_state)
-        if location_country:
-            structured_location_parts.append(location_country)
-        if location_zip:
-            structured_location_parts.append(location_zip)
-
-        # Cross-join search terms with locations
-        if location_array and structured_location_parts:
-            # Both provided — cross-join with both arrays (union)
-            all_locations = list(location_array) + [', '.join(structured_location_parts)]
-            queries = [f'{term} {loc}' for term in search_terms for loc in all_locations]
-        elif location_array:
-            queries = [f'{term} {loc}' for term in search_terms for loc in location_array]
-        elif structured_location_parts:
-            structured_loc = ', '.join(structured_location_parts)
-            queries = [f'{term} {structured_loc}' for term in search_terms]
-        else:
-            queries = list(search_terms)
-
-        # Estimate cost before starting
-        estimated_places = len(queries) * (max_places_per_search // 2)
+        estimated_places = len(search_terms) * (max_places_per_search // 2)
         base_cost = estimated_places * 0.0015
         enrichment_cost = estimated_places * 0.005 if enrich_social else 0
-        full_address_cost = estimated_places * 0.008 if full_address else 0
-        total_estimate = base_cost + enrichment_cost + full_address_cost
+        total_estimate = base_cost + enrichment_cost
 
         if max_cost_usd > 0 and total_estimate > max_cost_usd:
             Actor.log.error(f'Estimated cost ${total_estimate:.2f} exceeds budget ${max_cost_usd:.2f} – aborting')
@@ -113,7 +73,6 @@ async def main() -> None:
         client = EnhancedGoogleMapsClient(max_concurrency=max_concurrency, use_proxy=use_proxy)
 
         try:
-            # Load seen place IDs for delta mode
             seen_place_ids: Set[str] = set()
             if incremental_mode in ('flag', 'new-only'):
                 seen_place_ids = await _load_seen_place_ids()
@@ -121,11 +80,10 @@ async def main() -> None:
             total_scraped = 0
             all_seen_ids = set()
 
-            for query in queries:
-                if total_scraped >= max_places_per_search * len(queries):
+            for query in search_terms:
+                if total_scraped >= max_places_per_search * len(search_terms):
                     break
 
-                # Apply pre-filters to query
                 filtered_query = client._apply_filters_to_query(query, website_selection, min_rating)
                 Actor.log.info(f'Searching: {filtered_query}')
 
@@ -155,28 +113,11 @@ async def main() -> None:
                     if incremental_mode == 'new-only' and not is_new:
                         continue
 
-                    # websiteSelection post-filter (hard filter, not just Google Maps pre-filter)
-                    if website_selection == 'without_website' and place.get('website'):
-                        continue
-                    if website_selection == 'with_website' and not place.get('website'):
-                        continue
-
-                    # excludeWebsites post-filter (redundant with above but independent field)
                     if exclude_websites and place.get('website'):
                         continue
 
                     if unclaimed_only and place.get('isClaimed') is True:
                         continue
-
-                    # Category post-filter
-                    if selected_category and place.get('category'):
-                        if place['category'].lower() != selected_category.lower():
-                            continue
-
-                    # Extract lat/lng from URL (free, no extra page load)
-                    coords = _parse_coords_from_url(place.get('placeUrl', ''))
-                    place['lat'] = coords.get('lat')
-                    place['lng'] = coords.get('lng')
 
                     place['searchString'] = query
                     place['_placeId'] = stable_id
@@ -184,26 +125,6 @@ async def main() -> None:
                     place['scrapedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
 
                     total_scraped += 1
-
-                # Batch full address extraction (shared browser)
-                if full_address and places_data:
-                    shared_browser = await client.async_start_browser()
-                    for place in places_data:
-                        pid = place.get('_placeId', '')
-                        if not place.get('title') or not place.get('placeUrl'):
-                            continue
-                        Actor.log.info(f'Extracting full address for: {place["title"]}')
-                        addr_info = await client.extract_full_address(
-                            place.get('placeUrl', ''),
-                            browser=shared_browser
-                        )
-                        place['fullAddress'] = addr_info.get('fullAddress', '')
-                        place['addressStreet'] = addr_info.get('street', '')
-                        place['addressCity'] = addr_info.get('city', '')
-                        place['addressState'] = addr_info.get('state', '')
-                        place['addressZip'] = addr_info.get('zip', '')
-                        place['addressCountry'] = addr_info.get('country', '')
-
                     await Actor.push_data(place)
 
             Actor.log.info(f'Total places scraped: {total_scraped}')

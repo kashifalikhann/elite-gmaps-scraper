@@ -38,6 +38,7 @@ def extract_place_from_array(arr: list) -> dict | None:
     r["location"] = _extract_coords(arr, arr_str)
     r["placeId"] = _extract_place_id(arr, arr_str)
     r["url"] = _extract_url(arr, arr_str)
+    r["isClaimed"] = _extract_is_claimed(arr, arr_str)
 
     if r["website"]:
         r["website"] = clean_website_url(r["website"])
@@ -229,5 +230,20 @@ def parse_hours(html: str) -> list[dict] | None:
                      html, re.IGNORECASE)
     if alt:
         return [{"day": m[0].capitalize(), "hours": f"{m[1]} - {m[2]}"} for m in alt]
+
+    return None
+
+
+def _extract_is_claimed(arr: list, arr_str: str) -> bool | None:
+    for p in [r'"isClaimed":\s*(true|false)', r'"claimed":\s*(true|false)']:
+        m = re.search(p, arr_str)
+        if m:
+            return m.group(1) == 'true'
+
+    for item in arr:
+        if item is True:
+            return True
+        if item is False:
+            return False
 
     return None

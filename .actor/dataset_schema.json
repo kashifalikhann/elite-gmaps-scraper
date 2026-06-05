@@ -19,7 +19,47 @@
       "address": {
         "type": "string",
         "title": "Address",
-        "description": "Full street address of the business"
+        "description": "Street address of the business from search results"
+      },
+      "fullAddress": {
+        "type": "string",
+        "title": "Full Address",
+        "description": "Complete full address including city, state, zip, country. Only populated when fullAddress mode is enabled."
+      },
+      "addressStreet": {
+        "type": "string",
+        "title": "Address — Street",
+        "description": "Street and number component of full address"
+      },
+      "addressCity": {
+        "type": "string",
+        "title": "Address — City",
+        "description": "City component of full address"
+      },
+      "addressState": {
+        "type": "string",
+        "title": "Address — State",
+        "description": "State/province component of full address"
+      },
+      "addressZip": {
+        "type": "string",
+        "title": "Address — Zip Code",
+        "description": "Zip/postal code component of full address"
+      },
+      "addressCountry": {
+        "type": "string",
+        "title": "Address — Country",
+        "description": "Country component of full address"
+      },
+      "lat": {
+        "type": "number",
+        "title": "Latitude",
+        "description": "Latitude extracted from Google Maps place URL"
+      },
+      "lng": {
+        "type": "number",
+        "title": "Longitude",
+        "description": "Longitude extracted from Google Maps place URL"
       },
       "phone": {
         "type": "string",
@@ -34,23 +74,27 @@
       "emails": {
         "type": "array",
         "title": "Email Addresses",
-        "description": "Email addresses extracted from the business website",
-        "items": { "type": "string" }
+        "items": {
+          "type": "string"
+        }
       },
       "emailSource": {
         "type": "string",
-        "title": "Email Source Method",
-        "description": "Method used to extract the email (mailto, jsonld, html, cloudflare)"
+        "title": "Email Source Method"
       },
       "emailVerification": {
         "type": "string",
-        "title": "Email Verification Status",
-        "description": "Result of deliverability check"
+        "title": "Email Verification Status"
       },
-      "categoryName": {
+      "isClaimed": {
+        "type": "boolean",
+        "title": "Is Claimed",
+        "description": "Whether the business has claimed its Google Maps listing. null if unknown."
+      },
+      "category": {
         "type": "string",
         "title": "Business Category",
-        "description": "Google Maps category (e.g. Plumber, Restaurant, Coffee Shop)"
+        "description": "Google Maps category (e.g. Concrete contractor, Plumber)"
       },
       "totalScore": {
         "type": "number",
@@ -62,33 +106,12 @@
         "title": "Review Count",
         "description": "Number of Google Maps reviews"
       },
-      "location": {
-        "type": "object",
-        "title": "Coordinates",
-        "description": "Latitude and longitude object",
-        "properties": {
-          "lat": { "type": "number" },
-          "lng": { "type": "number" }
-        }
-      },
-      "openingHours": {
-        "type": "array",
-        "title": "Opening Hours",
-        "description": "Array of opening hours by day",
-        "items": {
-          "type": "object",
-          "properties": {
-            "day": { "type": "string" },
-            "hours": { "type": "string" }
-          }
-        }
-      },
-      "placeId": {
+      "hours": {
         "type": "string",
-        "title": "Google Place ID",
-        "description": "Unique Google identifier for this place"
+        "title": "Opening Hours",
+        "description": "Opening hours summary (e.g. 'Open ⋅ Closes 5PM')"
       },
-      "url": {
+      "placeUrl": {
         "type": "string",
         "title": "Google Maps URL",
         "description": "URL to the business's Google Maps place page"
@@ -101,22 +124,20 @@
       "_isNew": {
         "type": "boolean",
         "title": "Is New Listing",
-        "description": "Whether this listing was seen for the first time (true) or was already known from a previous run (false). Only present when incremental mode is enabled."
+        "description": "Whether this listing was first seen in the current run. Only when incremental mode is enabled."
       },
       "_placeId": {
         "type": "string",
         "title": "Place ID (Hash)",
-        "description": "Stable hash identifier for this place. Used by incremental mode to track previously seen listings."
+        "description": "Stable hash identifier for this place"
       },
       "_crmHeaders": {
         "type": "string",
-        "title": "CRM CSV Headers",
-        "description": "CSV header line matching the selected CRM's import format."
+        "title": "CRM CSV Headers"
       },
       "_crmRow": {
         "type": "string",
-        "title": "CRM CSV Row",
-        "description": "CSV values for this row formatted for the selected CRM import."
+        "title": "CRM CSV Row"
       }
     },
     "additionalProperties": true

@@ -2,6 +2,7 @@ node_modules/
 storage/
 .apify/
 .env
+tmp/
 .DS_Store
 __pycache__/
 *.pyc
