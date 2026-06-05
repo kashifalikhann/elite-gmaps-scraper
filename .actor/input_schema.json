@@ -7,18 +7,14 @@
       "title": "Search Terms",
       "type": "array",
       "description": "List of search terms to query on Google Maps (e.g. \"concrete contractor\"). Each runs independently and results are deduplicated across all terms.",
-      "prefill": [
-        "plumbers in Austin, TX"
-      ],
-      "default": [
-        "plumbers in Austin, TX"
-      ],
+      "prefill": [],
+      "default": [],
       "editor": "stringList",
       "items": {
         "type": "string",
         "minLength": 1
       },
-      "minItems": 1,
+      "minItems": 0,
       "maxItems": 100,
       "uniqueItems": true
     },
@@ -167,9 +163,9 @@
       "editor": "checkbox"
     },
     "selectedCategory": {
-      "title": "Google Business Category Filter (optional)",
+      "title": "Google Business Category (optional)",
       "type": "string",
-      "description": "Only return places whose Google Maps category matches this selection. Dropdown is searchable \u2014 start typing to filter 4,045 categories. Leave blank for all categories.",
+      "description": "If searchStringsArray is empty, this is used as the search term. Dropdown is searchable \u2014 start typing to filter 4,045 categories. Leave blank for all categories.",
       "editor": "select",
       "enum": [
         "",

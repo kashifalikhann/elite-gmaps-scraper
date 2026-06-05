@@ -68,8 +68,13 @@ async def main() -> None:
         location_lat = actor_input.get('locationLat', '')
         location_lng = actor_input.get('locationLng', '')
 
+        # Use selectedCategory as search term when searchStringsArray is empty
+        if not search_terms and selected_category:
+            search_terms = [selected_category]
+            Actor.log.info(f'Using selectedCategory as search term: {selected_category}')
+
         if not search_terms:
-            Actor.log.error('No search terms provided – aborting')
+            Actor.log.error('No search terms or category provided – aborting')
             return
 
         # Compose location from structured fields
@@ -167,11 +172,6 @@ async def main() -> None:
 
                     if unclaimed_only and place.get('isClaimed') is True:
                         continue
-
-                    # Category post-filter
-                    if selected_category and place.get('category'):
-                        if place['category'].lower() != selected_category.lower():
-                            continue
 
                     # Build the final record
                     record = dict(place)
