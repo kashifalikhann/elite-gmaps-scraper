@@ -173,38 +173,35 @@ async def main() -> None:
                         if place['category'].lower() != selected_category.lower():
                             continue
 
+                    # Build the final record
+                    record = dict(place)
+                    record['searchString'] = query
+                    record['_placeId'] = stable_id
+                    record['_isNew'] = is_new
+                    record['scrapedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+
                     # Extract lat/lng from URL (free, no extra page load)
                     coords = _parse_coords_from_url(place.get('placeUrl', ''))
-                    place['lat'] = coords.get('lat')
-                    place['lng'] = coords.get('lng')
-
-                    place['searchString'] = query
-                    place['_placeId'] = stable_id
-                    place['_isNew'] = is_new
-                    place['scrapedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                    record['lat'] = coords.get('lat')
+                    record['lng'] = coords.get('lng')
 
                     total_scraped += 1
 
-                # Batch full address extraction (shared browser)
-                if full_address and places_data:
-                    shared_browser = await client.async_start_browser()
-                    for place in places_data:
-                        pid = place.get('_placeId', '')
-                        if not place.get('title') or not place.get('placeUrl'):
-                            continue
-                        Actor.log.info(f'Extracting full address for: {place["title"]}')
+                    # Full address extraction (per-place detail page navigation)
+                    if full_address:
+                        Actor.log.info(f'Extracting full address for: {record["title"]}')
                         addr_info = await client.extract_full_address(
-                            place.get('placeUrl', ''),
-                            browser=shared_browser
+                            record.get('placeUrl', ''),
+                            browser=None
                         )
-                        place['fullAddress'] = addr_info.get('fullAddress', '')
-                        place['addressStreet'] = addr_info.get('street', '')
-                        place['addressCity'] = addr_info.get('city', '')
-                        place['addressState'] = addr_info.get('state', '')
-                        place['addressZip'] = addr_info.get('zip', '')
-                        place['addressCountry'] = addr_info.get('country', '')
+                        record['fullAddress'] = addr_info.get('fullAddress', '')
+                        record['addressStreet'] = addr_info.get('street', '')
+                        record['addressCity'] = addr_info.get('city', '')
+                        record['addressState'] = addr_info.get('state', '')
+                        record['addressZip'] = addr_info.get('zip', '')
+                        record['addressCountry'] = addr_info.get('country', '')
 
-                    await Actor.push_data(place)
+                    await Actor.push_data(record)
 
             Actor.log.info(f'Total places scraped: {total_scraped}')
 

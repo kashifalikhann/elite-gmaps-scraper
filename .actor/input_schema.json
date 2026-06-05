@@ -8343,7 +8343,8 @@
           "title": "Enabled",
           "type": "boolean",
           "default": false,
-          "description": "Enable social media enrichment."
+          "description": "Enable social media enrichment.",
+          "editor": "checkbox"
         },
         "platforms": {
           "title": "Platforms",
@@ -8352,29 +8353,40 @@
             "facebook": {
               "title": "Facebook",
               "type": "boolean",
-              "default": true
+              "default": true,
+              "description": "Enable Facebook profile enrichment",
+              "editor": "checkbox"
             },
             "instagram": {
               "title": "Instagram",
               "type": "boolean",
-              "default": true
+              "default": true,
+              "description": "Enable Instagram profile enrichment",
+              "editor": "checkbox"
             },
             "youtube": {
               "title": "YouTube",
               "type": "boolean",
-              "default": false
+              "default": false,
+              "description": "Enable YouTube channel enrichment",
+              "editor": "checkbox"
             },
             "tiktok": {
               "title": "TikTok",
               "type": "boolean",
-              "default": false
+              "default": false,
+              "description": "Enable TikTok profile enrichment",
+              "editor": "checkbox"
             },
             "twitter": {
               "title": "Twitter/X",
               "type": "boolean",
-              "default": false
+              "default": false,
+              "description": "Enable Twitter/X profile enrichment",
+              "editor": "checkbox"
             }
-          }
+          },
+          "description": "Toggle which social platforms to enrich when social links are found."
         }
       }
     },
@@ -8387,21 +8399,27 @@
         "enabled": {
           "title": "Enabled",
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "Enable lead extraction from business websites.",
+          "editor": "checkbox"
         },
         "maxLeadsPerPlace": {
           "title": "Max Leads Per Place",
           "type": "integer",
           "default": 1,
           "minimum": 1,
-          "maximum": 10
+          "maximum": 10,
+          "description": "Maximum leads to extract per place.",
+          "editor": "number"
         },
         "departments": {
           "title": "Department Filter",
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "Departments to target for lead extraction.",
+          "editor": "stringList"
         }
       }
     },
@@ -8411,7 +8429,8 @@
       "default": 0,
       "minimum": 0,
       "maximum": 5000,
-      "editor": "number"
+      "editor": "number",
+      "description": "Maximum reviews to extract per place"
     },
     "reviewsSort": {
       "title": "Reviews Sort",
@@ -8423,7 +8442,8 @@
         "relevant"
       ],
       "default": "newest",
-      "editor": "select"
+      "editor": "select",
+      "description": "Sort order for reviews (mostRelevant, newest, highestRating, lowestRating)"
     },
     "maxImages": {
       "title": "Max Additional Images Per Place",
@@ -8431,7 +8451,8 @@
       "default": 0,
       "minimum": 0,
       "maximum": 20,
-      "editor": "number"
+      "editor": "number",
+      "description": "Maximum images to extract per place"
     },
     "incrementalMode": {
       "title": "Incremental / Delta Mode",
@@ -8466,7 +8487,8 @@
         "Pipedrive"
       ],
       "default": "none",
-      "editor": "select"
+      "editor": "select",
+      "description": "CRM export format (json or csv)"
     }
   },
   "required": [
